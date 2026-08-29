@@ -1,23 +1,20 @@
 import sys
-import termios
 import os
 from raw_mode import enable_raw_mode, disable_raw_mode
 
 
 def main():
-
-    default_attr = termios.tcgetattr(sys.stdin)
-
+    fd: int = sys.stdin.fileno()
     try:
-        enable_raw_mode(sys.stdin)
+        previous_settings: list = enable_raw_mode(fd)
         while True:
-            char = os.read(0, 1)
+            char = os.read(fd, 1)
             if char == b"\x11":
                 break
             print(f"{char}")
 
     finally:
-        disable_raw_mode(sys.stdin, default_attr)
+        disable_raw_mode(fd, previous_settings)
 
 
 if __name__ == "__main__":
