@@ -1,20 +1,16 @@
 import sys
 import os
-from raw_mode import enable_raw_mode, disable_raw_mode
+from raw_mode import RawMode
 
 
 def main():
     fd: int = sys.stdin.fileno()
-    try:
-        previous_settings: list = enable_raw_mode(fd)
+    with RawMode(fd):
         while True:
             char = os.read(fd, 1)
             if char == b"\x11":
                 break
-            print(f"{char}")
-
-    finally:
-        disable_raw_mode(fd, previous_settings)
+            print(char)
 
 
 if __name__ == "__main__":

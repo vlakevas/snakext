@@ -1,34 +1,41 @@
+from __future__ import annotations
 import termios
 
 
-def enable_raw_mode(fd: int) -> list:
-    old_attr_list = termios.tcgetattr(fd)
-    # we store the old attr list for the disabling module
-    new_attr_list = termios.tcgetattr(fd)
-    # we get the [iflag, oflag, cflag, lflag, ispeed, ospeed, cc] list
+class RawMode:
 
-    new_attr_list[0] &= ~(
-        termios.IXON
-        | termios.ICRNL
-        | termios.BRKINT
-        | termios.INPCK
-        | termios.ISTRIP
-        | termios.PARMRK
-        | termios.INLCR
-        | termios.IGNCR
-    )
-    new_attr_list[1] &= ~(termios.OPOST)
-    new_attr_list[2] &= ~(termios.CSIZE | termios.PARENB)
-    new_attr_list[2] |= termios.CS8
-    new_attr_list[3] &= ~(termios.ICANON | termios.ECHO | termios.ISIG | termios.IEXTEN)
-    new_attr_list[6][termios.VMIN] = 0
-    new_attr_list[6][termios.VTIME] = 1
+    def __init__(self, fd: int):
+        self.fd: int = fd
+        self.normal_attr_list: list
+        # [iflag, oflag, cflag, lflag, ispeed, ospeed, cc]
 
-    termios.tcsetattr(fd, termios.TCSAFLUSH, new_attr_list)
+    def __enter__(self) -> RawMode:
+        self.normal_attr_list = termios.tcgetattr(self.fd)
+        raw_attr_list: list = termios.tcgetattr(self.fd)
 
-    return old_attr_list
+        raw_attr_list[0] &= ~(
+            termios.IXON
+            | termios.ICRNL
+            | termios.BRKINT
+            | termios.INPCK
+            | termios.ISTRIP
+            | termios.PARMRK
+            | termios.INLCR
+            | termios.IGNCR
+        )
+        raw_attr_list[1] &= ~(termios.OPOST)
+        raw_attr_list[2] &= ~(termios.CSIZE | termios.PARENB)
+        raw_attr_list[2] |= termios.CS8
+        raw_attr_list[3] &= ~(
+            termios.ICANON | termios.ECHO | termios.ISIG | termios.IEXTEN
+        )
+        raw_attr_list[6][termios.VMIN] = 0
+        raw_attr_list[6][termios.VTIME] = 1
 
+        termios.tcsetattr(self.fd, termios.TCSAFLUSH, raw_attr_list)
 
-def disable_raw_mode(fd: int, default_attr: list) -> None:
+        return self
 
-    termios.tcsetattr(fd, termios.TCSAFLUSH, default_attr)
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.normal_attr_list)
+        return False
