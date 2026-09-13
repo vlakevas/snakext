@@ -1,16 +1,15 @@
 import sys
-import os
 from raw_mode import RawMode
+from input_handling import read_key, process_key, Status
 
 
 def main():
     fd: int = sys.stdin.fileno()
     with RawMode(fd):
         while True:
-            char = os.read(fd, 1)
-            if char == b"\x11":
+            n_status = process_key(read_key(fd))
+            if n_status == Status.QUIT:
                 break
-            print(char)
 
 
 if __name__ == "__main__":
