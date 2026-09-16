@@ -1,13 +1,17 @@
 import sys
-from raw_mode import RawMode
+
+from terminal import Terminal
 from input_handling import read_key, process_key, Status
 
 
 def main():
-    fd: int = sys.stdin.fileno()
-    with RawMode(fd):
+    fd_in: int = sys.stdin.fileno()
+    fd_out: int = sys.stdout.fileno()
+    with Terminal(fd_in, fd_out) as term:
         while True:
-            n_status = process_key(read_key(fd))
+            term.draw_rows()
+            term.terminal_flush()
+            n_status = process_key(read_key(fd_in))
             if n_status == Status.QUIT:
                 break
 

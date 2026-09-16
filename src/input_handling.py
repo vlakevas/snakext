@@ -23,6 +23,7 @@ def process_key(key: bytes) -> Status:
     if key == b"\x11":
         return Status.QUIT
 
+    #yet to add the b"a" handling
     
     else:  # default case
         return Status.NOTHING
